@@ -1,17 +1,14 @@
 dbscan <- tabPanel("DBSCAN",
                  sidebarLayout(sidebarPanel(
                    p(
-                     "Hi there, this shiny app was built to help visualise and understand commonly used algorithms in statistics and machine learning."
+                     "This is a demo of the DBSCAN density based clustering algorithm."
                    ),
                    p(
                      "The code for this app can be found", tags$b(tags$a(href ="https://github.com/BayanHammami/resume-shiny", "here"))
-                   ),
-                   p(
-                     "Please contact me on:", tags$b("bayan.hammami@gmail.com")
                    )
                  ),
                  mainPanel(
-                   plotOutput("home_plot", height = "600px"),
+                   plotOutput("dbscan_plot", height = "600px"),
                    style="text-align: center;"
                    
                  ))

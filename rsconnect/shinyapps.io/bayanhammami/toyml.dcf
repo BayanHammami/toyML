@@ -1,0 +1,12 @@
+name: toyml
+title: toyml
+username:
+account: bayanhammami
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 390954
+bundleId: 1506601
+url: https://bayanhammami.shinyapps.io/toyml/
+when: 1532919820.82083
+asMultiple: FALSE
+asStatic: FALSE

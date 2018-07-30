@@ -14,7 +14,7 @@ kmeans <- tabPanel("K-Means",
                          tags$li('Re-calculate cluster center based on new points allocated')
                        ),
                        p("The code for this app can be found", tags$b(
-                         tags$a(href = "https://github.com/BayanHammami/resume-shiny", "here")
+                         tags$a(href = "https://github.com/BayanHammami/toyML", "here")
                        )),
                        fluidRow(
                         column(width = 6,

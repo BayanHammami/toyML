@@ -9,6 +9,8 @@ ui <- navbarPage(
   theme = shinytheme("paper"),
   home,
   navbarMenu("Clustering",
-             kmeans)
+             kmeans,
+             dbscan
+             )
   
 )
