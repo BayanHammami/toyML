@@ -1,6 +1,6 @@
 plot_points <- function(all_points){
   p <- ggplot(data = all_points)
-  if(!sum(all_points$assigned_cluster) == 0){
+  if(!(sum(all_points$assigned_cluster) == 0)){
     p <- p +   
       geom_point(aes(x = x, y = y, color = as.factor(assigned_cluster)))
   }else{
@@ -61,37 +61,39 @@ region_query <- function(all_points, point, epsilon) {
   return(sphere_points)
 }
 
-
+#Version using a recursive function
 expand_cluster <-
   function(all_points,
            point,
            sphere_points,
            cluster,
            epsilon,
-           min_points) {
+           min_points,
+           plots) {
     sphere_points_all <- sphere_points
     all_points[all_points$point_id == point$point_id,]$assigned_cluster <-
       cluster
     for (sphere_point_index in 1:nrow(sphere_points)) {
-      if (sphere_points$visited[sphere_point_index] == 'not visited') {
+      if (sphere_points$visited[sphere_point_index] == FALSE) {
         sphere_point <- sphere_points[sphere_point_index,]
         all_points[all_points$point_id == sphere_point$point_id,]$visited <-
-          'visited'
+          TRUE
         sphere_point <- sphere_points[sphere_point_index,]
         sphere_points_new <-
           region_query(all_points, sphere_point, epsilon)
         
         if (nrow(sphere_points_new) > min_points) {
           if (sphere_point$assigned_cluster == 0) {
-            all_points[all_points$point_id == sphere_point$point_id,]$assigned_cluster <-
-              cluster
-            
+            all_points[all_points$point_id == sphere_point$point_id,]$assigned_cluster <- cluster
+            plots <- c(plots, list(plot_points(all_points)))
             all_points <- expand_cluster(all_points,
                                          point,
                                          sphere_points_new,
                                          cluster,
                                          epsilon,
-                                         min_points)
+                                         min_points,
+                                         plots)$all_points
+            
             
           }
         }
@@ -101,12 +103,70 @@ expand_cluster <-
       }
     }
     
-    return(all_points)
+    return(list(all_points = all_points, plots = plots))
   }
 
 
-all_points <- generate_data(100, 3, 0.02)
-all_points$visited <- 'not visited'
+
+#Version using a while loop - this is more understandable
+expand_cluster <-
+  function(all_points,
+           point,
+           cluster,
+           epsilon,
+           min_points) {
+    
+    sphere_point_list <- list()
+    more_points <- TRUE
+    while(more_points){
+      # print(point)
+      sphere_points <-
+        region_query(all_points, point, epsilon)  
+    
+      sphere_points$center_point_id <- point$point_id 
+      if(nrow(sphere_points) > min_points){
+        if(all_points[all_points$point_id == point$point_id,]$assigned_cluster == 0){
+          all_points[all_points$point_id == point$point_id,]$assigned_cluster <-
+            cluster          
+        }
+      }
+      
+      all_points[all_points$point_id == point$point_id, ]$visited <-
+        TRUE
+      sphere_points[sphere_points$point_id == point$point_id, ]$visited <-
+        TRUE
+      p <- plot_points(all_points)
+      # Sys.sleep(0.3)
+      # print(p)
+      
+      sphere_point_list[[length(sphere_point_list) + 1]] <- sphere_points
+      sphere_points <- bind_rows(sphere_point_list)
+      # print(all_points)
+      point <- sphere_points %>%
+        group_by(point_id) %>% 
+        summarise(visited = as.logical(max(visited))) %>% 
+        filter(visited == FALSE) %>%
+        head(1)
+      
+      point <- all_points %>% 
+        filter(point_id %in% point$point_id)
+      
+      if(nrow(point) == 0){
+        print('Stopping')
+        # stop('Stopped')
+        more_points = FALSE
+      }
+    
+    }
+    
+    return(list(all_points = all_points))
+  }
+
+
+
+
+all_points <- generate_data(20, 3, 0.02)
+all_points$visited <- FALSE
 #0 means none
 all_points$assigned_cluster <- 0
 plot_points(all_points)
@@ -118,23 +178,21 @@ all_points <- all_points %>%
 
 
 
-epsilon <- 0.02
-min_points <- 2
+epsilon <- 0.06
+min_points <- 1
 #REPEAT BELOW
 cluster <- max(all_points$assigned_cluster) + 1
 point <- all_points %>%
-  filter(visited == 'not visited') %>%
-  sample_n(1) %>% 
+  filter(visited == FALSE) %>%
+  head(1) %>% 
   as.tibble
 
-sphere_points <- region_query(all_points, point, epsilon)
-print(nrow(sphere_points))
-if(nrow(sphere_points) > min_points){
-  all_points <-
-    expand_cluster(all_points, point, sphere_points, cluster, epsilon, min_points)  
+if(nrow(point) == 0){
+  print('No more points')
 }
 
-all_points[all_points$point_id == point$point_id, ]$visited <- 'visited'
-
+output <-
+expand_cluster(all_points, point, cluster, epsilon, min_points)
+all_points <- output$all_points
 plot_points(all_points)
 
