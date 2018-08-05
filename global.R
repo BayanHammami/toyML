@@ -5,6 +5,8 @@ library(dplyr)
 library(tibble)
 library(shinythemes)
 print('global')
+options(warn=-1)
+
 
 kmeans_defaults <- list()
 kmeans_defaults$num_points <- 30
@@ -13,3 +15,10 @@ kmeans_defaults$num_clusters <- 4
 
 
 dbscan_defaults <- list()
+dbscan_defaults$num_points <- 30
+dbscan_defaults$num_clusters <- 4
+dbscan_defaults$epsilon <- 0.02
+dbscan_defaults$min_points <- 3
+dbscan_defaults$num_points_to_expand <- 10
+dbscan_defaults$sd <- 0.01
+
