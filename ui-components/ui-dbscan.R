@@ -61,7 +61,8 @@ dbscan <- tabPanel("DBSCAN",
                    actionButton("dbscan_expand_cluster", label = "Expand Cluster"),
                    hr(),
                    p('Current Cluster Index'),
-                   p(textOutput('dbscan_current_cluster'))
+                   p(textOutput('dbscan_current_cluster')),
+                   p(textOutput('dbscan_convergence_text'))
                    
                  ),
                  mainPanel(

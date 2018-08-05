@@ -58,9 +58,6 @@ dbscan_functions$calculate_distance <- function(point1, point2) {
 }
 
 dbscan_functions$region_query <- function(all_points, point, epsilon) {
-  print('region query func')
-  print(point$x)
-  print(point$y)
   all_points$distance_to_point <-
     sapply(1:nrow(all_points), function(point_index) {
       calculate_distance(c(point$x[1], point$y[1]), c(all_points$x[point_index], all_points$y[point_index]))
@@ -98,9 +95,6 @@ dbscan_functions$expand_cluster <-
       # print(iter)
       sphere_points <-
         dbscan_functions$region_query(all_points, point, epsilon)  
-      print('region query')
-      print(max(sphere_points$x))
-      print(min(sphere_points$x))           
       
       sphere_points$center_point_id <- point$point_id 
       if(nrow(sphere_points) > min_points){
@@ -122,7 +116,6 @@ dbscan_functions$expand_cluster <-
       # all_plots <- c(all_plots, list(p))
       sphere_point_list[[length(sphere_point_list) + 1]] <- sphere_points
       sphere_points <- bind_rows(sphere_point_list)
-      print(nrow(sphere_points))
       # print(all_points)
       point <- sphere_points %>%
         group_by(point_id) %>% 
@@ -132,8 +125,7 @@ dbscan_functions$expand_cluster <-
       
       point <- all_points %>% 
         filter(point_id %in% point$point_id)
-      print('select next point')
-      print(point)
+
       
       if(nrow(point) == 0){
         more_points_in_cluster <- FALSE

@@ -46,7 +46,8 @@ server <- function(input, output) {
     all_points = dbscan_functions$generate_data(dbscan_defaults$num_points, dbscan_defaults$num_clusters, dbscan_defaults$sd),
     more_points_in_cluster = FALSE,
     cluster = 0,
-    sphere_points = NULL
+    sphere_points = NULL,
+    converged = FALSE
   )
   
   observeEvent(input$dbscan_generate_data, {
@@ -55,15 +56,14 @@ server <- function(input, output) {
     dbscan_values$more_points_in_cluster = FALSE
     dbscan_values$cluster = 0
     dbscan_values$sphere_points = NULL
+    dbscan_values$converged = FALSE
   })
   
   observeEvent(input$dbscan_expand_cluster, {
     print('dbscan_expand_cluster')
     all_points <- dbscan_values$all_points
     if(!(sum(!all_points$visited) == 0)){
-      print(dbscan_values$more_points_in_cluster)
       if(!dbscan_values$more_points_in_cluster){
-        print('next cluster')
         cluster <- max(all_points$assigned_cluster) + 1  
         dbscan_values$cluster <- cluster
         point <- all_points %>%
@@ -71,10 +71,7 @@ server <- function(input, output) {
           head(1) %>%
           as.tibble
       }else{
-        print('same cluster')
-        print(nrow(dbscan_values$sphere_points))
-        print(max(dbscan_values$sphere_points$x))
-        print(min(dbscan_values$sphere_points$x))           
+       
         
         point <- dbscan_values$sphere_points %>%
           group_by(point_id) %>% 
@@ -85,9 +82,7 @@ server <- function(input, output) {
         
         point <- all_points %>% 
           filter(point_id %in% point$point_id)
-        
-        print('Point')
-        print(point)
+
       }
       
       if(nrow(point) == 0){
@@ -109,18 +104,27 @@ server <- function(input, output) {
       dbscan_values$all_points <- output$all_points
       dbscan_values$more_points_in_cluster <- output$more_points_in_cluster
       dbscan_values$sphere_points <- output$sphere_points      
+    }else{
+      dbscan_values$converged <- TRUE
     }
     
 
     
   })
-  
+
+  output$dbscan_convergence_text <- renderText({ 
+    if(dbscan_values$converged){
+      return("The algorithm has converged and there are no more points to explore.")
+    }else{
+      return("")
+    }
+  })
+    
   output$dbscan_current_cluster <- renderText({ 
     dbscan_values$cluster
   })
   
   output$dbscan_plot <- renderPlot({
-    print('dbscan_plot')
     dbscan_functions$plot_points(dbscan_values$all_points)
     
   })  
