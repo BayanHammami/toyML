@@ -146,17 +146,18 @@ for(bucket_name in bucket_to_test){
   if(length(unique(points_in_bucket$class)) == 2){
     print('Not Converged')
     variable_cutoffs <- list()
-    variables_errors <- c()
+    variable_errors <- c()
     cutoffs <- c()
     for(variable in variables){
       print(variable)
       variable_cutoffs[[variable]] <- find_optimal_cutoff(variable, points_in_bucket)
       variable_errors <- c(variable_errors, variable_cutoffs[[variable]]$error)
       cutoffs <- c(cutoffs, variable_cutoffs[[variable]]$cutoff)
-
+      print(cutoffs)
+      print(variable_errors)
     }
     
-    best_variable <- names(variable_cutoffs)[min(variables_errors) == variables_errors]
+    best_variable <- names(variable_cutoffs)[min(variable_errors) == variable_errors][1]
     
     print('Best Variable')
     print(best_variable)
