@@ -1,20 +1,28 @@
+
+plot_points <- function(all_points){
+  p <-  ggplot(data = all_points) +
+    geom_point(aes(x = x, y = y, shape = class, color = predicted_class), alpha = 0.5, size = 3)
+  
+  return(p)
+  
+}
 decisiontree_functions <- list()
 
 decisiontree_functions$generate_data <- function(n = 100){
   x_values <- runif(n, -1, 1)
   y_values <- runif(n, -1, 1)
   
-  gradient <- runif(1, -4, 4)
+  gradient <- runif(1, -2, 2)
   
   all_points <- tibble(x = x_values, y = y_values) %>% 
     rownames_to_column %>% 
     mutate(class = ifelse(y > gradient*x, 'blue', 'red')) %>% 
-    mutate(bucket = '')
+    mutate(bucket = '') %>% 
+    mutate(stop = FALSE)
   
   all_points$predicted_class <- predicted_class(all_points, '')
   
-  p <- ggplot(data = all_points) +
-    geom_point(aes(x = x, y = y, color = class), alpha = 0.5)
+  p <- plot_points(all_points)
    
   return(list(all_points = all_points, p = p))
   
@@ -29,7 +37,7 @@ find_optimal_cutoff <- function(variable, points_in_bucket){
   new_error <- 0
   
   for(value_index in 1:(length(values) - 1)){
-    print(value_index)
+    # print(value_index)
     value <- values[value_index]
     next_value <- values[value_index + 1]
     average_value <- mean(value, next_value)
@@ -42,9 +50,6 @@ find_optimal_cutoff <- function(variable, points_in_bucket){
       points_in_bucket_eval <- points_in_bucket %>%
         mutate(bucket = ifelse(y > average_value, paste0(bucket, 'l'), paste0(bucket, 'r')))
     }
-    if(!exists('new_error')){
-      new_error <- 1
-    }
 
     new_error <- 0
     for(bucket_tmp in unique(points_in_bucket_eval$bucket)){
@@ -55,15 +60,22 @@ find_optimal_cutoff <- function(variable, points_in_bucket){
       
       new_error <- calculate_error(points_in_bucket_eval_bucket_tmp) + new_error      
     }
-
-    if(new_error < current_error | !exists('current_value')){
+    if(exists('current_error', inherits = FALSE)){
+      if(new_error < current_error){
+        current_error <- new_error
+        current_value <- average_value
+        current_points_in_bucket_eval <- points_in_bucket_eval
+      }
+      
+    }else{
       current_error <- new_error
       current_value <- average_value
       current_points_in_bucket_eval <- points_in_bucket_eval
+      
     }
-    
-    print(current_error)
-    print(current_value)
+
+    # print(current_error)
+    # print(current_value)
     
   }
   
@@ -86,7 +98,7 @@ calculate_error <- function(points_in_bucket){
     arrange((num_points)) %>% 
     head(1)
   
-  error <- sum(class_counts$num_points)/nrow(points_in_bucket)
+  error <- sum(class_counts$num_points)
   
   if(length(unique(points_in_bucket$class)) == 1){
     error <- 0
@@ -109,48 +121,60 @@ predicted_class <- function(points_in_bucket, bucket_name){
   return(predicted_class)
   
 }
-output <- decisiontree_functions$generate_data(100)
+
+output <- decisiontree_functions$generate_data(1000)
 all_points <- output$all_points
 p <- output$p
-
+p
 variables <- c('x', 'y')
 
+#START
 
-new_error <- 1
+bucket_to_test <- all_points %>% 
+  filter(stop == FALSE)
 
-
-for(bucket_name in unique(all_points$bucket)){
+bucket_to_test <- unique(bucket_to_test$bucket)
+for(bucket_name in bucket_to_test){
+  
+  print(bucket_name)
+  
   points_in_bucket <- all_points %>% 
     filter(bucket == bucket_name)
   
-  variable_cutoffs <- list()
-  current_error <- 1
-  for(variable in variables){
-    
-    variable_cutoffs[[variable]] <- find_optimal_cutoff(variable, points_in_bucket)
-    
-    if(variable_cutoffs[[variable]]$error < current_error){
-      best_variable <- variable
-      current_error <- variable_cutoffs[[variable]]$error
-    }
-  }
+  print(glue('Current error: {calculate_error(points_in_bucket)}'))
   
-  error_of_branch <- calculate_error(points_in_bucket)
-  
-  if(variable_cutoffs[[best_variable]]$error < error_of_branch){
-    points_in_bucket <- variable_cutoffs[[best_variable]]$points_in_bucket_eval
-  }
-  
-  points_in_bucket$predicted_class <- sapply(1:unique(points_in_bucket$bucket), function(bucket_name_new){
-    predicted_class(points_in_bucket, bucket_name_new)
-  })
-  
-  all_points <- all_points %>% 
-    filter(!(bucket == bucket_name)) %>% 
-    bind_rows(points_in_bucket)
-  
-  
-  
-}
+  if(length(unique(points_in_bucket$class)) == 2){
+    print('Not Converged')
+    variable_cutoffs <- list()
+    variables_errors <- c()
+    cutoffs <- c()
+    for(variable in variables){
+      print(variable)
+      variable_cutoffs[[variable]] <- find_optimal_cutoff(variable, points_in_bucket)
+      variable_errors <- c(variable_errors, variable_cutoffs[[variable]]$error)
+      cutoffs <- c(cutoffs, variable_cutoffs[[variable]]$cutoff)
 
+    }
+    
+    best_variable <- names(variable_cutoffs)[min(variables_errors) == variables_errors]
+    
+    print('Best Variable')
+    print(best_variable)
+    
+    points_in_bucket <- variable_cutoffs[[best_variable]]$points_in_bucket_eval
+    
+    points_in_bucket$predicted_class <- sapply(points_in_bucket$bucket, function(bucket_name_new){
+      predicted_class(points_in_bucket, bucket_name_new)
+    })
+    
+    
+    
+    all_points <- all_points %>% 
+      filter(!(bucket == bucket_name)) %>% 
+      bind_rows(points_in_bucket)    
+  }
+
+}
+p <- plot_points(all_points)
+print(p, newpage = F)
 
