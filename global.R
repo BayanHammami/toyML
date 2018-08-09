@@ -23,3 +23,6 @@ dbscan_defaults$min_points <- 3
 dbscan_defaults$num_points_to_expand <- 50
 dbscan_defaults$sd <- 0.02
 
+decisiontree_defaults <- list()
+decisiontree_defaults$num_points <- 300
+decisiontree_defaults$variables <- c('x', 'y')

@@ -90,7 +90,7 @@ server <- function(input, output) {
         print('No more points')
       }
       
-      output <-
+      result <-
         dbscan_functions$expand_cluster(
           all_points,
           point,
@@ -101,15 +101,12 @@ server <- function(input, output) {
           dbscan_values$sphere_points
         )
       
-      dbscan_values$all_points <- output$all_points
-      dbscan_values$more_points_in_cluster <- output$more_points_in_cluster
-      dbscan_values$sphere_points <- output$sphere_points      
+      dbscan_values$all_points <- result$all_points
+      dbscan_values$more_points_in_cluster <- result$more_points_in_cluster
+      dbscan_values$sphere_points <- result$sphere_points      
     }else{
       dbscan_values$converged <- TRUE
     }
-    
-
-    
   })
 
   output$dbscan_convergence_text <- renderText({ 
@@ -128,5 +125,31 @@ server <- function(input, output) {
     dbscan_functions$plot_points(dbscan_values$all_points)
     
   })  
+
+
+# Decision Tree -----------------------------------------------------------
+
+  decisiontree_values <- reactiveValues(
+    all_points = decisiontree_functions$generate_data(decisiontree_defaults$num_points)$all_points
+  )
+  
+  observeEvent(input$decisiontree_generate_data, {
+    print('decisiontree_generate')
+    decisiontree_values$all_points <- decisiontree_functions$generate_data(input$decisiontree_num_points)$all_points
+  })
+  
+  observeEvent(input$decisiontree_split_tree, {
+    print('decisiontree_splittree')
+    decisiontree_values$all_points <- decisiontree_functions$split_tree(decisiontree_values$all_points)
+  })
+  
+  output$decisiontree_plot <- renderPlot({
+    print('decisiontree_plot')
+    decisiontree_functions$plot_points(decisiontree_values$all_points)
+    
+  })
+  
+  
+  
   
 }

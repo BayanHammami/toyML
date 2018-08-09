@@ -10,7 +10,8 @@ ui <- navbarPage(
   home,
   navbarMenu("Clustering",
              kmeans,
-             dbscan
+             dbscan,
+             decisiontree
              )
   
 )
