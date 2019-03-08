@@ -6,8 +6,8 @@ decisiontree <- tabPanel("Decision Tree",
                          "
                        ),
                        tags$ol(
-                         tags$li('For each variable, calculate the cutoff value and minimises miss-classified error'),
-                         tags$li('Apply a split using the variable that produces to lowest miss-classification error')
+                         tags$li('For each variable, calculate the cutoff value that minimises miss-classified error'),
+                         tags$li('Apply a split using the variable that produces the lowest miss-classification error')
                        ),
                        p("The code for this app can be found", tags$b(
                          tags$a(href = "https://github.com/BayanHammami/toyML", "here")

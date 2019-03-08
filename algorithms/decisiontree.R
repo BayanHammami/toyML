@@ -5,7 +5,7 @@ decisiontree_functions <- list()
 
 decisiontree_functions$plot_points <- function(all_points){
   p <-  ggplot(data = all_points) +
-    geom_point(aes(x = x, y = y, shape = class, color = bucket), alpha = 0.5, size = 3)
+    geom_point(aes(x = x, y = y, shape = class, color = predicted_class), alpha = 0.5, size = 3)
   
   return(p)
   
